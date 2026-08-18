@@ -36,19 +36,24 @@ alive between calls.
 
 ## Install
 
+One command, no build step, no pnpm build approval — the repo ships its built
+`lib/`, and only GitHub HTTPS access is needed (no SSH key):
+
 ```sh
-dsh plugin --profile <name> add ./plugins/dsh-browser-harness
+dsh plugin --profile <name> add git+https://github.com/stdtnt/dsh-browser-harness.git
 ```
 
-> If the profile contains `github:user/repo` git dependencies, `add` re-resolves
-> the whole dependency graph and runs `git ls-remote` against GitHub (SSH port 22
-> by default). When GitHub SSH is unreachable the install fails; add `--offline`
-> to reuse the pnpm store cache instead — git deps installed before are already
-> pinned to a commit and need no network:
->
-> ```sh
-> dsh plugin --profile <name> add ./plugins/dsh-browser-harness --offline
-> ```
+With working GitHub SSH, the conventional short form also works:
+
+```sh
+dsh plugin --profile <name> add github:stdtnt/dsh-browser-harness
+```
+
+> If the profile already contains `github:user/repo` git dependencies, `add`
+> re-resolves the whole dependency graph and runs `git ls-remote` (SSH port 22
+> by default). When GitHub SSH is unreachable that resolution fails; add
+> `--offline` to reuse the pnpm store cache — viable when those git deps are
+> already installed in the store, since the plugin itself is fetched over HTTPS.
 
 Point the plugin at your harness binary. If `browser-harness` is on PATH,
 nothing else is needed; for an uninstalled checkout, add the plugin row config
@@ -115,8 +120,10 @@ npm run build     # tsc → lib/
 
 Unit tests exercise the runner protocol, script builders, argument validators,
 and the Cordis mount (all nine tools registered on `ctx.tools`) with a fake
-`browser-harness` shim; no browser or harness install is needed. The real
-integration smoke (against a real Chrome + harness checkout):
+`browser-harness` shim; no browser or harness install is needed. `lib/` is
+tracked in the repo so git installs work without a build step — run
+`npm run build` and commit it whenever `src/` changes. The real integration
+smoke (against a real Chrome + harness checkout):
 
 ```sh
 npm run build

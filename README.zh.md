@@ -27,15 +27,19 @@
 
 ## 安装
 
+一条命令即可，无需构建、无需 pnpm 构建审批——仓库已附带构建产物 `lib/`，只需要能访问 GitHub HTTPS（不需要 SSH key）：
+
 ```sh
-dsh plugin --profile <name> add ./plugins/dsh-browser-harness
+dsh plugin --profile <name> add git+https://github.com/stdtnt/dsh-browser-harness.git
 ```
 
-> 如果 profile 里含有 `github:user/repo` 形式的 git 依赖，`add` 会重新解析整棵依赖图并执行 `git ls-remote` 连接 GitHub（默认走 SSH 22 端口）。网络连不上 GitHub SSH 时安装会失败，此时加 `--offline` 复用 pnpm store 缓存即可（git 依赖若之前已安装，commit 已锁定，无需联网）：
->
-> ```sh
-> dsh plugin --profile <name> add ./plugins/dsh-browser-harness --offline
-> ```
+若你的机器配好了 GitHub SSH，也可用常规短形式：
+
+```sh
+dsh plugin --profile <name> add github:stdtnt/dsh-browser-harness
+```
+
+> 如果 profile 里已含有 `github:user/repo` 形式的 git 依赖，`add` 会重新解析整棵依赖图并执行 `git ls-remote`（默认走 SSH 22 端口）。网络连不上 GitHub SSH 时该解析会失败，此时加 `--offline` 复用 pnpm store 缓存即可（前提是这些 git 依赖之前已装进 store；插件本体走 HTTPS 拉取，不受影响）：
 
 将插件指向你的 harness 二进制。若 `browser-harness` 已在 PATH 中，无需其他配置；若使用未安装的 checkout，在 profile 的 `cordis.patch.yml`（或 `--patch` overlay）中加入插件行配置：
 
@@ -90,7 +94,7 @@ npm test          # 使用假 harness 二进制的单元测试
 npm run build     # tsc → lib/
 ```
 
-单元测试用假的 `browser-harness` shim 覆盖 runner 协议、脚本生成器、参数校验与 Cordis 挂载（9 个工具注册到 `ctx.tools`），无需浏览器或 harness 安装。真实冒烟脚本（连真实 Chrome + harness checkout）：
+单元测试用假的 `browser-harness` shim 覆盖 runner 协议、脚本生成器、参数校验与 Cordis 挂载（9 个工具注册到 `ctx.tools`），无需浏览器或 harness 安装。`lib/` 已纳入版本库，git 安装无需构建——改动 `src/` 后请运行 `npm run build` 并提交产物。真实冒烟脚本（连真实 Chrome + harness checkout）：
 
 ```sh
 npm run build

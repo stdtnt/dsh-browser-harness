@@ -1,5 +1,7 @@
 # dsh-browser-harness
 
+**English** · [![中文](https://img.shields.io/badge/中文-简体中文-blue)](README.zh.md)
+
 Drive Chrome from the DeepSeek Harness agent loop through
 [browser-harness](https://github.com/browser-use/browser-harness) — the thin
 editable CDP harness that connects agents to a real browser. This plugin wraps
@@ -37,6 +39,16 @@ alive between calls.
 ```sh
 dsh plugin --profile <name> add ./plugins/dsh-browser-harness
 ```
+
+> If the profile contains `github:user/repo` git dependencies, `add` re-resolves
+> the whole dependency graph and runs `git ls-remote` against GitHub (SSH port 22
+> by default). When GitHub SSH is unreachable the install fails; add `--offline`
+> to reuse the pnpm store cache instead — git deps installed before are already
+> pinned to a commit and need no network:
+>
+> ```sh
+> dsh plugin --profile <name> add ./plugins/dsh-browser-harness --offline
+> ```
 
 Point the plugin at your harness binary. If `browser-harness` is on PATH,
 nothing else is needed; for an uninstalled checkout, add the plugin row config
@@ -101,12 +113,20 @@ npm test          # unit tests against a fake harness binary
 npm run build     # tsc → lib/
 ```
 
-Unit tests exercise the runner protocol, script builders, and argument
-validators with a fake `browser-harness` shim; no browser or harness install is
-needed. A real smoke test: launch Chrome with
-`--remote-debugging-port=9222 --user-data-dir=/tmp/bh-test-profile`, set
-`binPath` to a harness checkout launcher, and drive the tools from an agent
-session.
+Unit tests exercise the runner protocol, script builders, argument validators,
+and the Cordis mount (all nine tools registered on `ctx.tools`) with a fake
+`browser-harness` shim; no browser or harness install is needed. The real
+integration smoke (against a real Chrome + harness checkout):
+
+```sh
+npm run build
+node tests/smoke.mjs /path/to/browser-harness /path/to/bh-home
+```
+
+It runs navigate → find → click → extract → type → wait → screenshot in
+sequence; first start a connectable Chrome with
+`--remote-debugging-port=9222 --user-data-dir=/tmp/bh-test-profile` (headless
+works).
 
 ## Security notes
 

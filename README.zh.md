@@ -1,5 +1,7 @@
 # dsh-browser-harness
 
+[![English](https://img.shields.io/badge/English-English-gray)](README.md) · **中文**
+
 通过 [browser-harness](https://github.com/browser-use/browser-harness)（连接智能体与真实浏览器的轻量可编辑 CDP 框架）从 DeepSeek Harness 智能体循环中驱动 Chrome。本插件封装 `browser-harness` CLI，向智能体暴露九个工具，覆盖导航、交互与内容提取。
 
 ## 工具
@@ -26,8 +28,14 @@
 ## 安装
 
 ```sh
-dsh plugin --profile <name> add ./plugins/dsh-browser-harness --office
+dsh plugin --profile <name> add ./plugins/dsh-browser-harness
 ```
+
+> 如果 profile 里含有 `github:user/repo` 形式的 git 依赖，`add` 会重新解析整棵依赖图并执行 `git ls-remote` 连接 GitHub（默认走 SSH 22 端口）。网络连不上 GitHub SSH 时安装会失败，此时加 `--offline` 复用 pnpm store 缓存即可（git 依赖若之前已安装，commit 已锁定，无需联网）：
+>
+> ```sh
+> dsh plugin --profile <name> add ./plugins/dsh-browser-harness --offline
+> ```
 
 将插件指向你的 harness 二进制。若 `browser-harness` 已在 PATH 中，无需其他配置；若使用未安装的 checkout，在 profile 的 `cordis.patch.yml`（或 `--patch` overlay）中加入插件行配置：
 
@@ -82,7 +90,14 @@ npm test          # 使用假 harness 二进制的单元测试
 npm run build     # tsc → lib/
 ```
 
-单元测试用假的 `browser-harness` shim 覆盖 runner 协议、脚本生成器与参数校验，无需浏览器或 harness 安装。真实冒烟：用 `--remote-debugging-port=9222 --user-data-dir=/tmp/bh-test-profile` 启动 Chrome，将 `binPath` 指向 harness checkout 启动器，再从智能体会话驱动各工具。
+单元测试用假的 `browser-harness` shim 覆盖 runner 协议、脚本生成器、参数校验与 Cordis 挂载（9 个工具注册到 `ctx.tools`），无需浏览器或 harness 安装。真实冒烟脚本（连真实 Chrome + harness checkout）：
+
+```sh
+npm run build
+node tests/smoke.mjs /path/to/browser-harness /path/to/bh-home
+```
+
+脚本会按顺序执行 navigate → find → click → extract → type → wait → screenshot；需要先用 `--remote-debugging-port=9222 --user-data-dir=/tmp/bh-test-profile` 启动一个可连接的 Chrome（headless 也可）。
 
 ## 安全说明
 
